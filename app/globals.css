@@ -1,26 +1,297 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
+/* Make dark: variants use the .dark class instead of prefers-color-scheme */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ===== Root theme variables ===== */
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ===== Global animations ===== */
+@layer utilities {
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .animate-slideInUp {
+    animation: slideInUp 0.4s ease-out;
+  }
+
+  .animate-slideInDown {
+    animation: slideInDown 0.4s ease-out;
+  }
+}
+
+/* ===== Custom scrollbar styling — thin, rounded, modern ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(180 180 180 / 0.4);
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background-clip: content-box;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(150 150 150 / 0.6);
+  background-clip: content-box;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgb(63 63 70 / 0.6);
+  background-clip: content-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgb(113 113 122 / 0.8);
+  background-clip: content-box;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(180 180 180 / 0.4) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgb(63 63 70 / 0.6) transparent;
+}
+
+/* ===== Selection styling ===== */
+::selection {
+  background-color: rgb(99 102 241 / 0.3);
+  color: inherit;
+}
+
+/* ===== Placeholder styling ===== */
+::placeholder {
+  opacity: 1;
+}
+
+/* ===== Smooth scrolling ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ===== Smooth transitions (scoped) ===== */
+.transition-theme {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* ===== Highlight.js theme overrides ===== */
+.hljs {
+  background: transparent !important;
+  color: #e4e4e7 !important;
+}
+
+.light .hljs {
+  color: #1f2937 !important;
+}
+
+/* Syntax highlighting colors — dark mode */
+.hljs-keyword { color: #c084fc !important; }
+.hljs-string { color: #67e8f9 !important; }
+.hljs-number { color: #fbbf24 !important; }
+.hljs-comment { color: #71717a !important; font-style: italic; }
+.hljs-function { color: #60a5fa !important; }
+.hljs-title { color: #60a5fa !important; }
+.hljs-built_in { color: #f472b6 !important; }
+.hljs-type { color: #34d399 !important; }
+.hljs-attr { color: #a78bfa !important; }
+.hljs-attribute { color: #a78bfa !important; }
+.hljs-literal { color: #fbbf24 !important; }
+.hljs-meta { color: #71717a !important; }
+.hljs-tag { color: #f472b6 !important; }
+.hljs-name { color: #f472b6 !important; }
+.hljs-selector-class { color: #67e8f9 !important; }
+.hljs-selector-tag { color: #c084fc !important; }
+.hljs-deletion { color: #f87171 !important; }
+.hljs-addition { color: #34d399 !important; }
+.hljs-variable { color: #fbbf24 !important; }
+.hljs-regexp { color: #67e8f9 !important; }
+.hljs-symbol { color: #fbbf24 !important; }
+.hljs-section { color: #60a5fa !important; font-weight: bold; }
+.hljs-link { color: #60a5fa !important; text-decoration: underline; }
+
+/* Syntax highlighting colors — light mode */
+.light .hljs-keyword { color: #7c3aed !important; }
+.light .hljs-string { color: #059669 !important; }
+.light .hljs-number { color: #d97706 !important; }
+.light .hljs-comment { color: #a1a1aa !important; font-style: italic; }
+.light .hljs-function { color: #2563eb !important; }
+.light .hljs-title { color: #2563eb !important; }
+.light .hljs-built_in { color: #db2777 !important; }
+.light .hljs-type { color: #059669 !important; }
+.light .hljs-attr { color: #7c3aed !important; }
+.light .hljs-attribute { color: #7c3aed !important; }
+.light .hljs-literal { color: #d97706 !important; }
+.light .hljs-meta { color: #a1a1aa !important; }
+.light .hljs-tag { color: #db2777 !important; }
+.light .hljs-name { color: #db2777 !important; }
+.light .hljs-selector-class { color: #059669 !important; }
+.light .hljs-selector-tag { color: #7c3aed !important; }
+.light .hljs-deletion { color: #dc2626 !important; }
+.light .hljs-addition { color: #059669 !important; }
+.light .hljs-variable { color: #d97706 !important; }
+.light .hljs-regexp { color: #059669 !important; }
+.light .hljs-symbol { color: #d97706 !important; }
+.light .hljs-section { color: #2563eb !important; font-weight: bold; }
+.light .hljs-link { color: #2563eb !important; text-decoration: underline; }
+
+/* ===== Preview markdown styling ===== */
+.preview-content h1 {
+  @apply mb-6 text-4xl font-bold tracking-tight;
+}
+
+.preview-content h2 {
+  @apply mb-4 mt-8 text-2xl font-bold tracking-tight;
+}
+
+.preview-content h3 {
+  @apply mb-3 mt-6 text-xl font-bold;
+}
+
+.preview-content h4 {
+  @apply mb-2 mt-4 text-lg font-semibold;
+}
+
+.preview-content p {
+  @apply mb-4 leading-relaxed;
+}
+
+.preview-content ul,
+.preview-content ol {
+  @apply mb-4 ml-6 list-inside;
+}
+
+.preview-content li {
+  @apply mb-2;
+}
+
+.preview-content blockquote {
+  @apply border-l-4 border-indigo-500 bg-indigo-600/5 py-2 pl-4 italic;
+}
+
+/* Inline code — light */
+.preview-content code {
+  @apply rounded bg-zinc-100 px-2 py-1 font-mono text-sm text-zinc-900;
+}
+
+/* Inline code — dark */
+.dark .preview-content code {
+  @apply bg-zinc-800 text-zinc-100;
+}
+
+.preview-content table {
+  @apply mb-4 w-full border-collapse;
+}
+
+/* Table cells — light */
+.preview-content th,
+.preview-content td {
+  @apply border border-zinc-300 px-4 py-2 text-left;
+}
+
+/* Table cells — dark */
+.dark .preview-content th,
+.dark .preview-content td {
+  @apply border-zinc-700;
+}
+
+/* Table header — light */
+.preview-content th {
+  @apply bg-zinc-100 font-semibold;
+}
+
+/* Table header — dark */
+.dark .preview-content th {
+  @apply bg-zinc-900;
+}
+
+.preview-content a {
+  @apply underline;
+  color: #6366f1;
+}
+
+.dark .preview-content a {
+  color: #818cf8;
+}
+
+.preview-content a:hover {
+  color: #4f46e5;
+}
+
+.dark .preview-content a:hover {
+  color: #6366f1;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
 }

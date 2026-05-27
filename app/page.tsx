@@ -124,9 +124,11 @@ export default function Home() {
 
         {/* Fullscreen single pane (preview) */}
         {isPreviewFullscreen && (
-          <div className="flex flex-1 overflow-hidden px-4 py-4 sm:px-6 lg:px-8">
+          // <div className="flex flex-1 overflow-hidden px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex flex-1 overflow-hidden bg-white px-4 py-4 dark:bg-white sm:px-6 lg:px-8">
             <div className="mx-auto flex w-full max-w-6xl gap-4">
-              <div className="flex flex-1 flex-col overflow-hidden">
+              {/* <div className="flex flex-1 flex-col overflow-hidden"> */}
+              <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
                     Preview (Fullscreen)

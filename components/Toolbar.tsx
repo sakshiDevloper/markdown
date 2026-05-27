@@ -35,14 +35,94 @@ export default function Toolbar({ html, onReset, onClear }: ToolbarProps) {
 
   // Download HTML as a file
   const downloadHtml = () => {
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "converted.html";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const fullHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Converted Markdown</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.7;
+      padding: 40px;
+      color: #18181b;
+      background: white;
+    }
+
+    h1,h2,h3,h4,h5,h6 {
+      margin-top: 24px;
+      margin-bottom: 16px;
+    }
+
+    p {
+      margin-bottom: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+    }
+
+    th,
+    td {
+      border: 1px solid #d4d4d8;
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      background: #f4f4f5;
+      font-weight: 600;
+    }
+
+    pre {
+      background: #18181b;
+      color: #f4f4f5;
+      padding: 20px;
+      border-radius: 16px;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: monospace;
+    }
+
+    blockquote {
+      border-left: 4px solid #6366f1;
+      padding-left: 16px;
+      color: #52525b;
+      margin: 20px 0;
+    }
+
+    a {
+      color: #4f46e5;
+    }
+  </style>
+</head>
+
+<body>
+  ${html}
+</body>
+</html>
+`;
+
+  const blob = new Blob([fullHtml], { type: "text/html" });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "converted.html";
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+};
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">

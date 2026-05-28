@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   useState,
@@ -19,6 +19,7 @@ import type { FileTab } from "@/components/FileTabs";
 import PresentationMode from "@/components/PresentationMode";
 import LintPanel from "@/components/LintPanel";
 import { useKeybindEngine, VimEmacsToggle } from "@/components/KeybindEngine";
+import ShortcutModal from "@/components/ShortcutModal";
 import { sampleMarkdown } from "@/lib/sample";
 import { FiEdit3, FiEye, FiShare2, FiMonitor, FiAlertCircle } from "react-icons/fi";
 import { extractHeadingsFromMarkdown } from "@/lib/headings";
@@ -52,6 +53,7 @@ export default function Home() {
   const [showLint, setShowLint] = useState(false);
   const [keybindMode, setKeybindMode] = useState<"normal" | "vim" | "emacs">("normal");
   const [shareTooltip, setShareTooltip] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const activeFile = useMemo(
     () => files.find((f) => f.id === activeFileId) ?? files[0],
@@ -342,7 +344,7 @@ export default function Home() {
                 <VimEmacsToggle mode={keybindMode} onChange={setKeybindMode} />
               </div>
 
-              {/* Sidebar toggle — always visible in toolbar */}
+              {/* Sidebar toggle â€” always visible in toolbar */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 title={sidebarOpen ? "Close outline" : "Open outline"}
@@ -527,3 +529,4 @@ export default function Home() {
     </div>
   );
 }
+

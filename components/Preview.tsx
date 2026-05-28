@@ -6,93 +6,76 @@ import {
   useRef,
   useEffect,
   useState,
+  type UIEvent,
+  type RefObject,
 } from "react";
 
 import { marked } from "marked";
 import hljs from "highlight.js";
+import { createSlugger } from "@/lib/headings";
 
 interface PreviewProps {
   markdown: string;
+  scrollRef?: RefObject<HTMLDivElement | null>;
+  onScroll?: (event: UIEvent<HTMLDivElement>) => void;
   fullscreen?: boolean;
   onToggleFullscreen?: () => void;
 }
 
-// Configure marked to use highlight.js for code highlighting
+// Configure marked
 marked.setOptions({
   gfm: true,
   breaks: true,
 } as never);
 
-// Custom renderer for code blocks with accessible copy button
-const renderer = new marked.Renderer();
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
-renderer.code = ({ text, lang }) => {
-  const language = lang && hljs.getLanguage(lang) ? lang : "plaintext";
-
-  let highlighted: string;
-
-  try {
-    highlighted = hljs.highlight(text, { language }).value;
-  } catch {
-    highlighted = hljs.highlightAuto(text).value;
-  }
-
-  const safeText = encodeURIComponent(text);
-
-  return `
-  <div class="code-block-wrapper relative group my-4 overflow-hidden rounded-lg border border-zinc-700/30 bg-zinc-900/60 shadow-lg">
-    <div class="flex items-center justify-between border-b border-zinc-700/20 bg-zinc-800/40 px-4 py-2.5">
-      <span class="font-mono text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
-        ${language}
-      </span>
-
-      <button
-        data-copy="${safeText}"
-        class="code-copy-btn rounded-md px-2.5 py-1 text-[10px] font-medium text-zinc-500 transition-all hover:bg-zinc-700/50 hover:text-zinc-200 opacity-0 group-hover:opacity-100"
-      >
-        Copy
-      </button>
-    </div>
-
-    <pre class="overflow-x-auto p-4">
-      <code class="hljs language-${language}">
-        ${highlighted}
-      </code>
-    </pre>
-  </div>
-  `;
-};
-
-marked.use({ renderer });
-
-// Live HTML preview component for rendered markdown
 export default function Preview({
   markdown,
+  scrollRef,
+  onScroll,
   fullscreen,
   onToggleFullscreen,
 }: PreviewProps) {
   const previewRef = useRef<HTMLDivElement>(null);
 
-  // Prevent hydration mismatch
   const [mounted, setMounted] = useState(false);
 
-  // Toggle between Preview and Raw HTML
   const [mode, setMode] = useState<"preview" | "html">("preview");
+
+  const mergedRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      previewRef.current = node;
+      if (scrollRef) {
+        scrollRef.current = node;
+      }
+    },
+    [scrollRef]
+  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Parse markdown to HTML and memoize
+  // Markdown → HTML
   const html = useMemo(() => {
     if (!mounted) return "";
 
     if (!markdown.trim()) {
       return `
-      <div class="flex flex-col items-center justify-center h-full">
+      <div class="flex h-full flex-col items-center justify-center">
         <div class="text-center">
-          <p class="text-zinc-500 text-sm font-medium">No preview</p>
-          <p class="text-zinc-600 text-xs mt-1">
+          <p class="text-sm font-medium text-zinc-500">
+            No preview
+          </p>
+
+          <p class="mt-1 text-xs text-zinc-600">
             Start typing markdown to see the preview...
           </p>
         </div>
@@ -101,17 +84,85 @@ export default function Preview({
     }
 
     try {
-      return marked.parse(markdown) as string;
+      const slugger = createSlugger();
+      const renderer = new marked.Renderer();
+
+      renderer.heading = ({ text, depth }) =>
+        `<h${depth} id="${slugger(text)}">${text}</h${depth}>`;
+
+      renderer.code = ({ text, lang }) => {
+        const normalized = (lang ?? "").trim().toLowerCase();
+        if (normalized === "mermaid") {
+          return `<pre class="mermaid my-4">${escapeHtml(text)}</pre>`;
+        }
+
+        const language =
+          normalized && hljs.getLanguage(normalized) ? normalized : "plaintext";
+        let highlighted: string;
+
+        try {
+          highlighted = hljs.highlight(text, { language }).value;
+        } catch {
+          highlighted = hljs.highlightAuto(text).value;
+        }
+
+        const safeText = encodeURIComponent(text);
+        return `
+  <div class="code-block-wrapper relative group my-4 overflow-hidden rounded-xl border border-zinc-700/30 bg-zinc-900/60 shadow-lg">
+    <div class="flex items-center justify-between border-b border-zinc-700/20 bg-zinc-800/40 px-4 py-2.5">
+      <span class="font-mono text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+        ${language}
+      </span>
+      <button
+        data-copy="${safeText}"
+        class="code-copy-btn rounded-md px-2.5 py-1 text-[10px] font-medium text-zinc-500 transition-all hover:bg-zinc-700/50 hover:text-zinc-200 opacity-0 group-hover:opacity-100"
+      >
+        Copy
+      </button>
+    </div>
+    <pre class="overflow-x-auto p-4">
+      <code class="hljs language-${language}">
+${highlighted}
+      </code>
+    </pre>
+  </div>
+  `;
+      };
+
+      return marked.parse(markdown, { renderer }) as string;
     } catch {
       return `
-      <p class="text-red-400 text-sm">
+      <p class="text-sm text-red-400">
         Error parsing markdown
       </p>
       `;
     }
   }, [markdown, mounted]);
 
-  // Handle copy button clicks via event delegation
+  useEffect(() => {
+    if (!mounted || mode !== "preview" || !previewRef.current) return;
+    const container = previewRef.current;
+    const mermaidNodes = container.querySelectorAll("pre.mermaid");
+    if (!mermaidNodes.length) return;
+
+    let cancelled = false;
+
+    import("mermaid").then((mod) => {
+      if (cancelled) return;
+
+      const mermaid = mod.default;
+      mermaid.initialize({ startOnLoad: false, securityLevel: "loose" });
+      mermaid.run({ nodes: Array.from(mermaidNodes) }).catch(() => {
+        // Keep fallback raw Mermaid text when rendering fails.
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [html, mode, mounted]);
+
+  // Copy code block button
   const handlePreviewClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement;
@@ -133,7 +184,6 @@ export default function Preview({
             }, 1500);
           })
           .catch(() => {
-            // Fallback
             const textarea = document.createElement("textarea");
 
             textarea.value = text;
@@ -153,25 +203,25 @@ export default function Preview({
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800/60 dark:bg-black dark:shadow-lg dark:shadow-black/30">
-      {/* Preview toolbar/header */}
+      {/* Header */}
       <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-2.5 dark:border-zinc-800/40 dark:bg-zinc-900/40">
-        {/* Fake window controls */}
+        {/* Fake controls */}
         <div className="flex gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-red-500 shadow-lg shadow-red-500/20"></div>
+          <div className="h-2.5 w-2.5 rounded-full bg-red-500"></div>
 
-          <div className="h-2.5 w-2.5 rounded-full bg-yellow-500 shadow-lg shadow-yellow-500/20"></div>
+          <div className="h-2.5 w-2.5 rounded-full bg-yellow-500"></div>
 
-          <div className="h-2.5 w-2.5 rounded-full bg-green-500 shadow-lg shadow-green-500/20"></div>
+          <div className="h-2.5 w-2.5 rounded-full bg-green-500"></div>
         </div>
 
-        {/* Preview title */}
+        {/* Title */}
         <div className="flex-1 px-4 text-center">
           <p className="font-mono text-xs font-semibold text-zinc-600 dark:text-zinc-300">
             preview.html
           </p>
         </div>
 
-        {/* Fullscreen toggle */}
+        {/* Fullscreen */}
         <button
           onClick={onToggleFullscreen}
           title={fullscreen ? "Exit fullscreen" : "Fullscreen preview"}
@@ -206,7 +256,7 @@ export default function Preview({
         </button>
       </div>
 
-      {/* Preview / HTML Toggle */}
+      {/* Toggle */}
       <div className="flex items-center gap-2 border-b border-zinc-200 bg-white px-4 py-2 dark:border-zinc-800 dark:bg-zinc-950">
         <button
           onClick={() => setMode("preview")}
@@ -231,23 +281,24 @@ export default function Preview({
         </button>
       </div>
 
-      {/* Scrollable preview content area */}
+      {/* Content */}
       <div
-        ref={previewRef}
+        ref={mergedRef}
+        onScroll={onScroll}
         className="flex-1 overflow-y-auto overscroll-contain bg-gradient-to-b from-white to-zinc-50 dark:from-black dark:to-black"
       >
-        {mode === "preview" ? (
-          <div
-            className="preview-content space-y-4 px-6 py-6 text-zinc-900 dark:text-zinc-100"
-            onClick={handlePreviewClick}
-          >
-            <div
-              suppressHydrationWarning
-              dangerouslySetInnerHTML={{ __html: html }}
-              className="max-w-none"
-            />
-          </div>
-        ) : (
+       {mode === "preview" ? (
+  <div
+    className="preview-content space-y-4 px-6 py-6 text-zinc-900 dark:text-zinc-100"
+    onClick={handlePreviewClick}
+  >
+    <div
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: html }}
+      className="max-w-none"
+    />
+  </div>
+) : (
           <div className="h-full p-6">
             <pre className="h-full overflow-auto rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100">
               <code>{html}</code>
@@ -256,11 +307,13 @@ export default function Preview({
         )}
       </div>
 
-      {/* Bottom status bar */}
+      {/* Footer */}
       <div className="border-t border-zinc-200 bg-zinc-50 px-4 py-2 text-xs text-zinc-500 dark:border-zinc-800/40 dark:bg-zinc-900/40 dark:text-zinc-500">
         <div className="flex items-center justify-between">
           <div>
-            {mode === "preview" ? "HTML Preview" : "Raw HTML Output"}
+            {mode === "preview"
+              ? "HTML Preview"
+              : "Raw HTML Output"}
           </div>
 
           <div>UTF-8</div>

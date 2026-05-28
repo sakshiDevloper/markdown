@@ -1,17 +1,26 @@
 "use client";
 
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, RefObject, UIEvent } from "react";
 
 interface EditorProps {
   value: string;
   onChange: (value: string) => void;
+  textareaRef?: RefObject<HTMLTextAreaElement | null>;
+  onScroll?: (event: UIEvent<HTMLTextAreaElement>) => void;
   fullscreen?: boolean;
   onToggleFullscreen?: () => void;
 }
 
 // Professional code sandbox-style markdown editor
 // Styled like VS Code, CodeSandbox, or StackBlitz
-export default function Editor({ value, onChange, fullscreen, onToggleFullscreen }: EditorProps) {
+export default function Editor({
+  value,
+  onChange,
+  textareaRef,
+  onScroll,
+  fullscreen,
+  onToggleFullscreen,
+}: EditorProps) {
   // Handle text input changes
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value);
@@ -36,6 +45,8 @@ export default function Editor({ value, onChange, fullscreen, onToggleFullscreen
   // Calculate line count for line numbers gutter
   const lineCount = value.split("\n").length;
   const gutterWidth = Math.max(3, String(lineCount).length);
+
+  
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800/60 dark:bg-zinc-950/80 dark:shadow-lg dark:shadow-black/30">
@@ -110,9 +121,11 @@ export default function Editor({ value, onChange, fullscreen, onToggleFullscreen
 
         {/* Textarea for markdown input */}
         <textarea
+          ref={textareaRef}
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          onScroll={onScroll}
           spellCheck={false}
           placeholder="// Enter your markdown here...
 // Try: # Heading, **bold**, `code`

@@ -1,16 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { FiCopy, FiDownload, FiRotateCcw, FiTrash2 } from "react-icons/fi";
+import {
+  FiCopy,
+  FiDownload,
+  FiFileText,
+  FiRotateCcw,
+  FiTrash2,
+} from "react-icons/fi";
 
 interface ToolbarProps {
   html: string;
   onReset: () => void;
   onClear: () => void;
+  onExportPdf: () => void;
 }
 
 // Toolbar with action buttons: reset, clear, copy, and download
-export default function Toolbar({ html, onReset, onClear }: ToolbarProps) {
+export default function Toolbar({
+  html,
+  onReset,
+  onClear,
+  onExportPdf,
+}: ToolbarProps) {
   // State for copy feedback
   const [copyFeedback, setCopyFeedback] = useState(false);
 
@@ -176,6 +188,15 @@ export default function Toolbar({ html, onReset, onClear }: ToolbarProps) {
       >
         <FiDownload className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">Download</span>
+      </button>
+
+      <button
+        onClick={onExportPdf}
+        title="Print / Export PDF"
+        className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-all duration-200 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+      >
+        <FiFileText className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">PDF</span>
       </button>
     </div>
   );

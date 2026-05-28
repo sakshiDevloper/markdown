@@ -88,7 +88,9 @@ export default function Preview({
       const renderer = new marked.Renderer();
 
       renderer.heading = ({ text, depth }) =>
-        `<h${depth} id="${slugger(text)}">${text}</h${depth}>`;
+        `<h${depth} id="${slugger(text)}" class="font-bold text-zinc-900 dark:text-zinc-100 ${
+          depth === 1 ? "text-2xl mt-6 mb-3" : depth === 2 ? "text-xl mt-5 mb-2" : "text-lg mt-4 mb-2"
+        }">${text}</h${depth}>`;
 
       renderer.code = ({ text, lang }) => {
         const normalized = (lang ?? "").trim().toLowerCase();
@@ -129,6 +131,38 @@ ${highlighted}
   `;
       };
 
+      // GFM: Task list items
+      renderer.listitem = ({ text, task, checked }) => {
+        if (task) {
+          return `<li class="flex items-start gap-2 my-1.5 text-zinc-800 dark:text-zinc-200"><input type="checkbox" ${
+            checked ? "checked" : ""
+          } disabled class="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-400 text-indigo-600 accent-indigo-600 dark:border-zinc-600 dark:accent-indigo-500" /><span>${
+            checked ? `<span class="line-through text-zinc-400 dark:text-zinc-500">${text}</span>` : text
+          }</span></li>`;
+        }
+        // Regular list item inherited styling via prose
+        return `<li class="my-1 text-zinc-800 dark:text-zinc-200">${text}</li>`;
+      };
+
+      // GFM: Tables with nicer styling
+      renderer.table = ({ header, rows }) => {
+        const headerHtml = header
+          .map((cell) => `<th class="border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-3 py-2 text-left text-sm font-semibold text-zinc-700 dark:text-zinc-300">${cell.text}</th>`)
+          .join("");
+        const rowsHtml = rows
+          .map(
+            (row) =>
+              `<tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">${row
+                .map((cell) => `<td class="border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300">${cell.text}</td>`)
+                .join("")}</tr>`,
+          )
+          .join("");
+        return `<div class="overflow-x-auto my-4"><table class="w-full border-collapse">${header ? `<thead>${headerHtml}</thead>` : ""}<tbody>${rowsHtml}</tbody></table></div>`;
+      };
+
+      // GFM: Strikethrough
+      renderer.del = ({ text }) => `<del class="text-zinc-400 dark:text-zinc-500 line-through">${text}</del>`;
+
       return marked.parse(markdown, { renderer }) as string;
     } catch {
       return `
@@ -152,7 +186,7 @@ ${highlighted}
 
       const mermaid = mod.default;
       mermaid.initialize({ startOnLoad: false, securityLevel: "loose" });
-      mermaid.run({ nodes: Array.from(mermaidNodes) }).catch(() => {
+      mermaid.run({ nodes: Array.from(mermaidNodes) as HTMLElement[] }).catch(() => {
         // Keep fallback raw Mermaid text when rendering fails.
       });
     });
@@ -285,7 +319,7 @@ ${highlighted}
       <div
         ref={mergedRef}
         onScroll={onScroll}
-        className="flex-1 overflow-y-auto overscroll-contain bg-gradient-to-b from-white to-zinc-50 dark:from-black dark:to-black"
+        className="flex-1 overflow-y-auto overscroll-contain bg-linear-to-b from-white to-zinc-50 dark:from-black dark:to-black"
       >
        {mode === "preview" ? (
   <div

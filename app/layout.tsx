@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   title: "Markdown Converter — MD to HTML",
   description:
     "A modern, real-time Markdown to HTML converter with syntax highlighting, live preview, and one-click export.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "MD Convert",
+  },
 };
 
 export default function RootLayout({
@@ -31,6 +37,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#09090b" />
         {/* Prevent flash of unstyled content (FOUC) for dark mode */}
         <script
           dangerouslySetInnerHTML={{
@@ -45,6 +54,20 @@ export default function RootLayout({
                   }
                 } catch (e) {}
               })()
+            `,
+          }}
+        />
+        {/* PWA service worker registration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                    console.log('SW registration failed:', err);
+                  });
+                });
+              }
             `,
           }}
         />

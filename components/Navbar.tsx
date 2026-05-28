@@ -11,8 +11,8 @@ export default function Navbar() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo and brand */}
-          <div className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20">
               <SiMarkdown className="h-4 w-4 text-white" />
             </div>
             <div className="hidden sm:block">

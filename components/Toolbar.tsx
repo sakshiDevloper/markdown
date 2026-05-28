@@ -184,7 +184,7 @@ export default function Toolbar({
       <button
         onClick={downloadHtml}
         title="Download HTML file"
-        className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-md shadow-indigo-600/30 transition-all duration-200 hover:from-indigo-500 hover:to-purple-500 hover:shadow-indigo-500/40"
+        className="inline-flex items-center gap-1.5 rounded-md bg-linear-to-r from-indigo-600 to-purple-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-md shadow-indigo-600/30 transition-all duration-200 hover:from-indigo-500 hover:to-purple-500 hover:shadow-indigo-500/40"
       >
         <FiDownload className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">Download</span>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { ChangeEvent, RefObject, UIEvent } from "react";
 import { useCallback, useMemo, useState, useRef, useEffect } from "react";
@@ -62,7 +62,7 @@ export default function Editor({
   const getTextarea = () => ref && "current" in ref ? ref.current : null;
 
   const applyShortcut = useCallback(
-    (action: "bold" | "italic" | "code" | "link" | "strikethrough" | "heading" | "blockquote" | "ul" | "ol") => {
+    (action: "bold" | "italic" | "code" | "codeblock" | "link" | "strikethrough" | "heading" | "blockquote" | "ul" | "ol") => {
       const ta = getTextarea();
       if (!ta) return;
       const start = ta.selectionStart;
@@ -84,6 +84,13 @@ export default function Editor({
           newValue = wrapSelection(value, start, end, "~~", "~~");
           newCursorPos = end + 4;
           break;
+        case "codeblock": {
+          // Insert fenced code block
+          const codeContent = value.slice(start, end) || "code";
+          newValue = value.slice(0, start) + "```\n" + codeContent + "\n```" + value.slice(end);
+          newCursorPos = start + 4 + codeContent.length + 4;
+          break;
+        }
         case "code": {
           if (start === end) {
             newValue = insertAtCursor(value, start, end, "``");
@@ -202,7 +209,7 @@ export default function Editor({
     onChange(e.target.value);
   };
 
-  // Drag & drop / paste images — insert at cursor position
+  // Drag & drop / paste images â€” insert at cursor position
   const insertImageAtCursor = useCallback(
     (markdownImage: string) => {
       const ta = getTextarea();
@@ -276,11 +283,11 @@ export default function Editor({
           const regex = new RegExp(escapeRegex(find), "gi");
           onChange(value.replace(regex, replaceWith));
         } else {
-          // Single replace — first occurrence only
+          // Single replace â€” first occurrence only
           onChange(value.replace(find, replaceWith));
         }
       } catch {
-        // regex error — skip
+        // regex error â€” skip
       }
     },
     [value, onChange],
@@ -326,7 +333,7 @@ export default function Editor({
             <span className="text-xs">{'"'}</span>
           </FmtBtn>
           <FmtBtn onClick={() => applyShortcut("ul")} title="Bullet list">
-            <span className="text-xs">•</span>
+            <span className="text-xs">â€¢</span>
           </FmtBtn>
           <FmtBtn onClick={() => applyShortcut("ol")} title="Numbered list">
             <span className="text-xs">1.</span>
@@ -428,7 +435,7 @@ export default function Editor({
           </div>
           <div className="hidden sm:flex items-center gap-2">
             <span className="text-zinc-400" title="Drop or paste images to insert">
-              📷 Paste/Drop images
+              ðŸ“· Paste/Drop images
             </span>
             <span>LF</span>
           </div>

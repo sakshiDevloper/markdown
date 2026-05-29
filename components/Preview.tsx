@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   useMemo,
@@ -13,6 +13,7 @@ import {
 import { marked } from "marked";
 import hljs from "highlight.js";
 import { createSlugger } from "@/lib/headings";
+import { replaceEmojiShortcodes, calculateTaskProgress } from "@/lib/extras";
 
 interface PreviewProps {
   markdown: string;
@@ -45,9 +46,8 @@ export default function Preview({
 }: PreviewProps) {
   const previewRef = useRef<HTMLDivElement>(null);
 
-  const [mounted, setMounted] = useState(false);
-
   const [mode, setMode] = useState<"preview" | "html">("preview");
+  const [taskProgress, setTaskProgress] = useState({ done: 0, total: 0 });
 
   const mergedRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -60,13 +60,11 @@ export default function Preview({
   );
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setTaskProgress(calculateTaskProgress(markdown));
+  }, [markdown]);
 
   // Markdown → HTML
   const html = useMemo(() => {
-    if (!mounted) return "";
-
     if (!markdown.trim()) {
       return `
       <div class="flex h-full flex-col items-center justify-center">
@@ -87,10 +85,15 @@ export default function Preview({
       const slugger = createSlugger();
       const renderer = new marked.Renderer();
 
-      renderer.heading = ({ text, depth }) =>
-        `<h${depth} id="${slugger(text)}" class="font-bold text-zinc-900 dark:text-zinc-100 ${
+      renderer.heading = ({ text, depth }) => {
+        const id = slugger(text);
+        const emojiText = replaceEmojiShortcodes(text);
+        return `<h${depth} id="${id}" class="font-bold text-zinc-900 dark:text-zinc-100 ${
           depth === 1 ? "text-2xl mt-6 mb-3" : depth === 2 ? "text-xl mt-5 mb-2" : "text-lg mt-4 mb-2"
-        }">${text}</h${depth}>`;
+        }">${emojiText}</h${depth}>`;
+      };
+
+      renderer.paragraph = ({ text }) => `<p class="my-2 leading-relaxed text-zinc-800 dark:text-zinc-200">${replaceEmojiShortcodes(text)}</p>`;
 
       renderer.code = ({ text, lang }) => {
         const normalized = (lang ?? "").trim().toLowerCase();
@@ -171,10 +174,10 @@ ${highlighted}
       </p>
       `;
     }
-  }, [markdown, mounted]);
+  }, [markdown]);
 
   useEffect(() => {
-    if (!mounted || mode !== "preview" || !previewRef.current) return;
+    if (mode !== "preview" || !previewRef.current) return;
     const container = previewRef.current;
     const mermaidNodes = container.querySelectorAll("pre.mermaid");
     if (!mermaidNodes.length) return;
@@ -194,7 +197,7 @@ ${highlighted}
     return () => {
       cancelled = true;
     };
-  }, [html, mode, mounted]);
+  }, [html, mode]);
 
   // Copy code block button
   const handlePreviewClick = useCallback(
@@ -356,3 +359,4 @@ ${highlighted}
     </div>
   );
 }
+

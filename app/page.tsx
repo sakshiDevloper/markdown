@@ -43,9 +43,35 @@ function createDefaultFiles(): FileTab[] {
 }
 
 export default function Home() {
-  const [files, setFiles] = useState<FileTab[]>(createDefaultFiles);
-  const [activeFileId, setActiveFileId] = useState(files[0].id);
-  const [activeTab, setActiveTab] = useState<"editor" | "preview">("editor");
+  const [files, setFiles] = useState<FileTab[]>(() => {
+    // Restore from localStorage synchronously on first render
+    try {
+      const stored = localStorage.getItem(FILES_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as FileTab[];
+        if (parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return createDefaultFiles();
+  });
+  const [activeFileId, setActiveFileId] = useState(() => {
+    try {
+      const stored = localStorage.getItem(FILES_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as FileTab[];
+        if (parsed.length > 0) return parsed[0].id;
+      }
+    } catch {}
+    return "default-1";
+  });
+  const TAB_STORAGE_KEY = "markdown-converter-tab";
+  const [activeTab, setActiveTab] = useState<"editor" | "preview">(() => {
+    try {
+      const stored = localStorage.getItem(TAB_STORAGE_KEY);
+      if (stored === "editor" || stored === "preview") return stored;
+    } catch {}
+    return "editor";
+  });
   const [fullscreen, setFullscreen] = useState<FullscreenMode>("none");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -89,15 +115,15 @@ export default function Home() {
 
   const handleChange = useCallback((value: string) => {
     setMarkdown(value);
-  }, []);
+  }, [setMarkdown]);
 
   const handleReset = useCallback(() => {
     setMarkdown(sampleMarkdown);
-  }, []);
+  }, [setMarkdown]);
 
   const handleClear = useCallback(() => {
     setMarkdown("");
-  }, []);
+  }, [setMarkdown]);
 
   // File tabs handlers
   const handleAddFile = useCallback(() => {
@@ -143,6 +169,20 @@ export default function Home() {
     value: markdown,
     onChange: setMarkdown,
   });
+
+  // Global "?" key opens shortcut reference modal
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "?" && e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+        if (tag !== "input" && tag !== "textarea") {
+          setShowShortcuts((prev) => !prev);
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const syncScroll = useCallback(
     (
@@ -217,30 +257,17 @@ export default function Home() {
   }, [parsedHtml]);
 
   useEffect(() => {
-    try {
-      const storedFiles = localStorage.getItem(FILES_STORAGE_KEY);
-      if (storedFiles !== null) {
-        const parsed = JSON.parse(storedFiles) as FileTab[];
-        if (parsed.length > 0) {
-          setFiles(parsed);
-          setActiveFileId(parsed[0].id);
-        }
-      }
-    } catch {
-      // Ignore storage read errors.
-    } finally {
-      // Check for shared content in URL hash
-      const shared = decodeShareLink();
-      if (shared) {
-        setFiles((prev) => [
-          { id: "shared-1", name: "shared.md", content: shared },
-          ...prev,
-        ]);
-        setActiveFileId("shared-1");
-        clearShareHash();
-      }
-      setIsHydrated(true);
+    // Check for shared content in URL hash (only once after mount)
+    const shared = decodeShareLink();
+    if (shared) {
+      setFiles((prev) => [
+        { id: "shared-1", name: "shared.md", content: shared },
+        ...prev,
+      ]);
+      setActiveFileId("shared-1");
+      clearShareHash();
     }
+    setIsHydrated(true);
   }, []);
 
   useEffect(() => {
@@ -254,6 +281,13 @@ export default function Home() {
     }, 500);
     return () => window.clearTimeout(id);
   }, [files, isHydrated]);
+
+  // Persist activeTab
+  useEffect(() => {
+    try {
+      localStorage.setItem(TAB_STORAGE_KEY, activeTab);
+    } catch {}
+  }, [activeTab]);
 
   // Determine layout class based on fullscreen state
   const isEditorFullscreen = fullscreen === "editor";
@@ -468,33 +502,6 @@ export default function Home() {
                 } flex-col`}
               >
                 <div className="flex h-full gap-3">
-                  {/* Sidebar outline panel */}
-                  {sidebarOpen && (
-                    <aside className="w-56 shrink-0 animate-slide-in overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                        Outline
-                      </p>
-                      <nav className="space-y-1">
-                        {tocHeadings.length === 0 ? (
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                            Add headings to build a table of contents.
-                          </p>
-                        ) : (
-                          tocHeadings.map((heading) => (
-                            <button
-                              key={heading.id}
-                              onClick={() => handleJumpToHeading(heading.id)}
-                              className="block w-full truncate rounded px-2 py-1 text-left text-xs text-zinc-700 transition hover:bg-zinc-200 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                              style={{ paddingLeft: `${heading.depth * 10}px` }}
-                              title={heading.text}
-                            >
-                              {heading.text}
-                            </button>
-                          ))
-                        )}
-                      </nav>
-                    </aside>
-                  )}
                   <div className="min-w-0 flex-1">
                     <Preview
                       markdown={markdown}
@@ -504,6 +511,68 @@ export default function Home() {
                       onToggleFullscreen={() => setFullscreen("preview")}
                     />
                   </div>
+                {/* Sidebar outline panel — professional right side panel */}
+                {sidebarOpen && (
+                  <aside className="w-64 shrink-0 border-l border-zinc-200 bg-white dark:border-zinc-800/60 dark:bg-zinc-950 flex flex-col">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-zinc-100 px-3 py-2.5 dark:border-zinc-800/40">
+                      <div className="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400">
+                          <line x1="3" y1="6" x2="21" y2="6" />
+                          <line x1="3" y1="12" x2="15" y2="12" />
+                          <line x1="3" y1="18" x2="21" y2="18" />
+                        </svg>
+                        <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                          Outline
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">
+                        {tocHeadings.length}
+                      </span>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 overflow-y-auto p-2">
+                      {tocHeadings.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-zinc-300 dark:text-zinc-600 mb-2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                            <polyline points="22,6 12,13 2,6" />
+                          </svg>
+                          <p className="text-[11px] text-zinc-400 dark:text-zinc-500 leading-relaxed">
+                            No headings found
+                          </p>
+                          <p className="text-[10px] text-zinc-300 dark:text-zinc-600 mt-0.5">
+                            Add # headings to build outline
+                          </p>
+                        </div>
+                      ) : (
+                        <nav className="space-y-0.5">
+                          {tocHeadings.map((heading) => (
+                            <button
+                              key={heading.id}
+                              onClick={() => handleJumpToHeading(heading.id)}
+                              className="group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-zinc-600 transition-all hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-200"
+                              title={heading.text}
+                            >
+                              {/* Depth indicator */}
+                              <span
+                                className="shrink-0 rounded-sm"
+                                style={{
+                                  width: `${heading.depth * 4}px`,
+                                  height: "2px",
+                                  backgroundColor: `var(--depth-color, ${heading.depth === 1 ? "#6366f1" : heading.depth === 2 ? "#8b5cf6" : "#a78bfa"})`,
+                                  opacity: 0.5 + heading.depth * 0.1,
+                                }}
+                              />
+                              <span className="truncate flex-1">{heading.text}</span>
+                            </button>
+                          ))}
+                        </nav>
+                      )}
+                    </div>
+                  </aside>
+                )}
                 </div>
               </div>
             </div>
@@ -525,8 +594,10 @@ export default function Home() {
         <PresentationMode markdown={markdown} onClose={() => setPresenting(false)} />
       )}
 
+      {showShortcuts && <ShortcutModal onClose={() => setShowShortcuts(false)} />}
       <Footer />
     </div>
   );
 }
+
 

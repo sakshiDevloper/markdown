@@ -43,35 +43,10 @@ function createDefaultFiles(): FileTab[] {
 }
 
 export default function Home() {
-  const [files, setFiles] = useState<FileTab[]>(() => {
-    // Restore from localStorage synchronously on first render
-    try {
-      const stored = localStorage.getItem(FILES_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as FileTab[];
-        if (parsed.length > 0) return parsed;
-      }
-    } catch {}
-    return createDefaultFiles();
-  });
-  const [activeFileId, setActiveFileId] = useState(() => {
-    try {
-      const stored = localStorage.getItem(FILES_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as FileTab[];
-        if (parsed.length > 0) return parsed[0].id;
-      }
-    } catch {}
-    return "default-1";
-  });
+  const [files, setFiles] = useState<FileTab[]>(createDefaultFiles);
+  const [activeFileId, setActiveFileId] = useState("default-1");
   const TAB_STORAGE_KEY = "markdown-converter-tab";
-  const [activeTab, setActiveTab] = useState<"editor" | "preview">(() => {
-    try {
-      const stored = localStorage.getItem(TAB_STORAGE_KEY);
-      if (stored === "editor" || stored === "preview") return stored;
-    } catch {}
-    return "editor";
-  });
+  const [activeTab, setActiveTab] = useState<"editor" | "preview">("editor");
   const [fullscreen, setFullscreen] = useState<FullscreenMode>("none");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -80,6 +55,12 @@ export default function Home() {
   const [keybindMode, setKeybindMode] = useState<"normal" | "vim" | "emacs">("normal");
   const [shareTooltip, setShareTooltip] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const dragCounterRef = useRef(0);
+
+  // Recent files tracking
+  const RECENT_FILES_KEY = "markdown-converter-recent";
+  const [recentFiles, setRecentFiles] = useState<Array<{ id: string; name: string; timestamp: number }>>([]);
 
   const activeFile = useMemo(
     () => files.find((f) => f.id === activeFileId) ?? files[0],
@@ -125,12 +106,29 @@ export default function Home() {
     setMarkdown("");
   }, [setMarkdown]);
 
+  // Track recently accessed files
+  const trackRecentFile = useCallback((fileId: string, fileName: string) => {
+    setRecentFiles((prev) => {
+      const filtered = prev.filter((f) => f.id !== fileId);
+      const newRecent = [{ id: fileId, name: fileName, timestamp: Date.now() }, ...filtered].slice(0, 5);
+      try {
+        localStorage.setItem(RECENT_FILES_KEY, JSON.stringify(newRecent));
+      } catch {}
+      return newRecent;
+    });
+  }, []);
+
   // File tabs handlers
   const handleAddFile = useCallback(() => {
+    let fileName = window.prompt("File name:", "untitled.md");
+    if (!fileName) return;
+    if (!fileName.endsWith(".md")) fileName += ".md";
     const newFile = createNewFile();
+    newFile.name = fileName;
     setFiles((prev) => [...prev, newFile]);
     setActiveFileId(newFile.id);
-  }, []);
+    trackRecentFile(newFile.id, newFile.name);
+  }, [trackRecentFile]);
 
   const handleDeleteFile = useCallback(
     (id: string) => {
@@ -152,7 +150,74 @@ export default function Home() {
     setFiles((prev) =>
       prev.map((f) => (f.id === id ? { ...f, name } : f)),
     );
-  }, []);
+    trackRecentFile(id, name);
+  }, [trackRecentFile]);
+
+  // Open rename dialog for a file
+  const handleRenameWithPrompt = useCallback((id: string, currentName: string) => {
+    const newName = window.prompt("Rename file:", currentName);
+    if (!newName) return;
+    const finalName = newName.endsWith(".md") ? newName : newName + ".md";
+    setFiles((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, name: finalName } : f)),
+    );
+    trackRecentFile(id, finalName);
+  }, [trackRecentFile]);
+
+  // Import markdown file
+  const handleImportMarkdown = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".md,.txt";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target?.result as string;
+        const newFile: FileTab = {
+          id: `file-${Date.now()}-${fileCounter++}`,
+          name: file.name,
+          content: content,
+        };
+        setFiles((prev) => [newFile, ...prev]);
+        setActiveFileId(newFile.id);
+        trackRecentFile(newFile.id, newFile.name);
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }, [trackRecentFile]);
+
+  // Export markdown file
+  const handleExportMarkdown = useCallback(() => {
+    const defaultName = activeFile.name.replace(/\.[^.]+$/, "") || "untitled";
+    const fileName = window.prompt("Export filename:", defaultName + ".md");
+    if (!fileName) return;
+    const element = document.createElement("a");
+    const file = new Blob([markdown], { type: "text/markdown" });
+    element.href = URL.createObjectURL(file);
+    element.download = fileName;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    URL.revokeObjectURL(element.href);
+  }, [markdown, activeFile.name]);
+
+  // Handle markdown file drop
+  const handleMarkdownFileDrop = useCallback(
+    (content: string, fileName: string) => {
+      const newFile: FileTab = {
+        id: `file-${Date.now()}-${fileCounter++}`,
+        name: fileName,
+        content: content,
+      };
+      setFiles((prev) => [newFile, ...prev]);
+      setActiveFileId(newFile.id);
+      trackRecentFile(newFile.id, newFile.name);
+    },
+    [trackRecentFile],
+  );
 
   // Share link
   const handleShareLink = useCallback(() => {
@@ -257,6 +322,32 @@ export default function Home() {
   }, [parsedHtml]);
 
   useEffect(() => {
+    // Restore persisted state from localStorage after hydration
+    try {
+      const storedFiles = localStorage.getItem(FILES_STORAGE_KEY);
+      if (storedFiles) {
+        const parsed = JSON.parse(storedFiles) as FileTab[];
+        if (parsed.length > 0) {
+          setFiles(parsed);
+          setActiveFileId(parsed[0].id);
+        }
+      }
+    } catch {}
+
+    try {
+      const storedTab = localStorage.getItem(TAB_STORAGE_KEY);
+      if (storedTab === "editor" || storedTab === "preview") {
+        setActiveTab(storedTab);
+      }
+    } catch {}
+
+    try {
+      const storedRecent = localStorage.getItem(RECENT_FILES_KEY);
+      if (storedRecent) {
+        setRecentFiles(JSON.parse(storedRecent));
+      }
+    } catch {}
+
     // Check for shared content in URL hash (only once after mount)
     const shared = decodeShareLink();
     if (shared) {
@@ -269,6 +360,15 @@ export default function Home() {
     }
     setIsHydrated(true);
   }, []);
+
+  // Track recently accessed files when activeFileId changes
+  useEffect(() => {
+    if (!isHydrated) return;
+    const currentFile = files.find((f) => f.id === activeFileId);
+    if (currentFile) {
+      trackRecentFile(activeFileId, currentFile.name);
+    }
+  }, [activeFileId, files, isHydrated, trackRecentFile]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -293,9 +393,77 @@ export default function Home() {
   const isEditorFullscreen = fullscreen === "editor";
   const isPreviewFullscreen = fullscreen === "preview";
 
+  // Global drag & drop for markdown/text files
+  const handleGlobalDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.types.some((t) => t === "Files")) {
+      setDragOver(true);
+    }
+  }, []);
+
+  const handleGlobalDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current <= 0) {
+      dragCounterRef.current = 0;
+      setDragOver(false);
+    }
+  }, []);
+
+  const handleGlobalDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleGlobalDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragOver(false);
+      dragCounterRef.current = 0;
+      for (const file of Array.from(e.dataTransfer.files)) {
+        if (file.type === "text/plain" || file.name.endsWith(".md") || file.name.endsWith(".txt")) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const content = event.target?.result as string;
+            const newFile: FileTab = {
+              id: `file-${Date.now()}-${fileCounter++}`,
+              name: file.name,
+              content,
+            };
+            setFiles((prev) => [newFile, ...prev]);
+            setActiveFileId(newFile.id);
+            trackRecentFile(newFile.id, newFile.name);
+          };
+          reader.readAsText(file);
+        }
+      }
+    },
+    [trackRecentFile],
+  );
+
   return (
-    <div className="flex min-h-screen flex-col bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100">
-      <Navbar />
+    <div
+      className="flex min-h-screen flex-col bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100"
+      onDragEnter={handleGlobalDragEnter}
+      onDragLeave={handleGlobalDragLeave}
+      onDragOver={handleGlobalDragOver}
+      onDrop={handleGlobalDrop}
+    >
+      {/* Drag overlay */}
+      {dragOver && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-indigo-500/10 backdrop-blur-sm pointer-events-none">
+          <div className="rounded-2xl border-2 border-dashed border-indigo-400 bg-white/90 px-10 py-8 shadow-xl dark:bg-zinc-900/90 dark:border-indigo-500">
+            <p className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">
+              Drop .md or .txt file here
+            </p>
+          </div>
+        </div>
+      )}
+      <Navbar recentFiles={recentFiles} activeFileName={activeFile?.name} onSelectFile={setActiveFileId} />
 
       <main className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-zinc-950">
         {/* Sticky toolbar bar */}
@@ -492,7 +660,25 @@ export default function Home() {
                   fullscreen={false}
                   onToggleFullscreen={() => setFullscreen("editor")}
                   fileName={activeFile.name}
+                  onImport={handleImportMarkdown}
+                  onExport={handleExportMarkdown}
+                  onMarkdownDrop={handleMarkdownFileDrop}
                 />
+                {/* Mobile preview below editor */}
+                <div className="shrink-0 border-t border-zinc-200 dark:border-zinc-800 mt-4 pt-4 sm:hidden">
+                  <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 px-2">
+                    Preview
+                  </div>
+                  <div className="rounded-lg border border-zinc-200 dark:border-zinc-800/60 bg-white dark:bg-black max-h-64 overflow-y-auto">
+                    <Preview
+                      markdown={markdown}
+                      scrollRef={previewScrollRef}
+                      onScroll={handlePreviewScroll}
+                      fullscreen={false}
+                      onToggleFullscreen={() => setFullscreen("preview")}
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Preview pane */}

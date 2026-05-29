@@ -12,6 +12,10 @@ interface EditorProps {
   fullscreen?: boolean;
   onToggleFullscreen?: () => void;
   fileName?: string;
+  // Import/Export handlers
+  onImport?: () => void;
+  onExport?: () => void;
+  onMarkdownDrop?: (content: string, fileName: string) => void;
 }
 
 function wrapSelection(
@@ -54,6 +58,9 @@ export default function Editor({
   fullscreen,
   onToggleFullscreen,
   fileName = "markdown.md",
+  onImport,
+  onExport,
+  onMarkdownDrop,
 }: EditorProps) {
   const internalRef = useRef<HTMLTextAreaElement | null>(null);
   const ref = textareaRef || internalRef;
@@ -237,9 +244,20 @@ export default function Editor({
         if (file.type.startsWith("image/")) {
           readImageAsMarkdown(file, insertImageAtCursor);
         }
+        // Handle markdown/text file drops
+        else if (file.type === "text/plain" || file.name.endsWith(".md") || file.name.endsWith(".txt")) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const content = event.target?.result as string;
+            if (onMarkdownDrop) {
+              onMarkdownDrop(content, file.name);
+            }
+          };
+          reader.readAsText(file);
+        }
       }
     },
-    [insertImageAtCursor],
+    [insertImageAtCursor, onMarkdownDrop],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
@@ -301,10 +319,13 @@ export default function Editor({
       {/* Editor toolbar/header with formatting buttons */}
       <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-2.5 dark:border-zinc-800/40 dark:bg-zinc-900/40">
         {/* Window controls */}
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <div className="h-2.5 w-2.5 rounded-full bg-red-500 shadow-lg shadow-red-500/20"></div>
           <div className="h-2.5 w-2.5 rounded-full bg-yellow-500 shadow-lg shadow-yellow-500/20"></div>
           <div className="h-2.5 w-2.5 rounded-full bg-green-500 shadow-lg shadow-green-500/20"></div>
+          <span className="ml-2 text-xs font-medium text-zinc-500 dark:text-zinc-400 truncate max-w-32">
+            {fileName}
+          </span>
         </div>
 
         {/* Formatting shortcut buttons */}
@@ -342,6 +363,17 @@ export default function Editor({
           <FmtBtn onClick={() => setShowFind((v) => !v)} title="Find & Replace (Ctrl+H)">
             <FiSearch className="h-3 w-3" />
           </FmtBtn>
+          {/* Import/Export buttons */}
+          {onImport && (
+            <FmtBtn onClick={onImport} title="Import markdown file">
+              <span className="text-xs">📥</span>
+            </FmtBtn>
+          )}
+          {onExport && (
+            <FmtBtn onClick={onExport} title="Export as markdown">
+              <span className="text-xs">📤</span>
+            </FmtBtn>
+          )}
         </div>
 
         {/* File name + fullscreen */}

@@ -53,10 +53,10 @@ new_block = '''  // Keybind engine
 
 content = content.replace(old_block, new_block)
 
-# 4) Add ? button after VimEmacsToggle divider
-old_toggle = '<VimEmacsToggle mode={keybindMode} onChange={setKeybindMode} />\n              <div className="mx-1 h-5 w-px bg-zinc-200 dark:bg-zinc-700"> </div>'
-new_toggle = old_toggle + '\n              <button\n                onClick={() => setShowShortcuts(true)}\n                title="Keyboard shortcuts (? )"\n                className="flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold text-zinc-500 transition-all hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"\n              >\n                ?\n              </button>'
-content = content.replace(old_toggle, new_toggle)
+# # 4) Add ? button after VimEmacsToggle divider
+# old_toggle = '<VimEmacsToggle mode={keybindMode} onChange={setKeybindMode} />\n              <div className="mx-1 h-5 w-px bg-zinc-200 dark:bg-zinc-700"> </div>'
+# new_toggle = old_toggle + '\n              <button\n                onClick={() => setShowShortcuts(true)}\n                title="Keyboard shortcuts (? )"\n                className="flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold text-zinc-500 transition-all hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"\n              >\n                ?\n              </button>'
+# content = content.replace(old_toggle, new_toggle)
 
 # 5) Add the ShortcutModal before Footer
 content = content.replace(

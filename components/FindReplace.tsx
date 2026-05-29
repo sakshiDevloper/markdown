@@ -83,7 +83,7 @@ export default function FindReplace({ text, onReplace, onClose }: FindReplacePro
               if (e.key === "Escape") onClose();
             }}
             placeholder="Find..."
-            className="w-full rounded-md border border-zinc-300 bg-zinc-50 py-1.5 pl-8 pr-2 text-xs outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-indigo-500"
+            className="w-full rounded-md border border-zinc-300 bg-zinc-50 py-1.5 pl-8 pr-2 text-xs outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500"
           />
         </div>
         <button
@@ -91,7 +91,7 @@ export default function FindReplace({ text, onReplace, onClose }: FindReplacePro
           title="Case sensitive"
           className={`flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold transition-all ${
             caseSensitive
-              ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-600/20 dark:text-indigo-400"
+              ? "bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200"
               : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
           }`}
         >
@@ -115,7 +115,7 @@ export default function FindReplace({ text, onReplace, onClose }: FindReplacePro
             if (e.key === "Escape") onClose();
           }}
           placeholder="Replace..."
-          className="flex-1 rounded-md border border-zinc-300 bg-zinc-50 py-1.5 px-2.5 text-xs outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-indigo-500"
+          className="flex-1 rounded-md border border-zinc-300 bg-zinc-50 py-1.5 px-2.5 text-xs outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500"
         />
         <span className="text-[10px] text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
           {find ? `${currentMatch}/${matchCount}` : ""}
@@ -126,7 +126,7 @@ export default function FindReplace({ text, onReplace, onClose }: FindReplacePro
         <button
           onClick={handleReplace}
           disabled={!find || matchCount === 0}
-          className="rounded-md bg-indigo-600 px-3 py-1 text-[11px] font-medium text-white transition-all hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="rounded-md bg-zinc-800 px-3 py-1 text-[11px] font-medium text-white transition-all hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-300"
         >
           Replace
         </button>

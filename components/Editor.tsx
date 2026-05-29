@@ -421,7 +421,7 @@ export default function Editor({
       )}
 
       {/* Editor content area */}
-      <div className="flex flex-1 overflow-hidden bg-linear-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-black">
+      <div className="flex flex-1 overflow-hidden bg-white dark:bg-zinc-950">
         <div
           className="select-none border-r border-zinc-200 bg-zinc-50 px-3 py-4 text-right font-mono text-xs leading-6 text-zinc-500 dark:border-zinc-800/40 dark:bg-zinc-900/50 dark:text-zinc-600"
           style={{ width: `${gutterWidth + 2}ch`, minWidth: "3.5ch" }}
@@ -448,7 +448,7 @@ export default function Editor({
 // Try: # Heading, **bold**, `code`
 
 # Welcome"
-          className="flex-1 resize-none border-0 bg-transparent py-4 pl-3 pr-4 font-mono text-sm leading-relaxed text-zinc-900 placeholder-zinc-400 caret-indigo-500 outline-none focus:ring-0 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-600 dark:caret-indigo-400"
+          className="flex-1 resize-none border-0 bg-transparent py-4 pl-3 pr-4 font-mono text-sm leading-relaxed text-zinc-900 placeholder-zinc-400 caret-zinc-900 outline-none focus:ring-0 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-600 dark:caret-zinc-100"
         />
       </div>
 
@@ -523,7 +523,7 @@ function InlineFindReplace({
             if (e.key === "Escape") onClose();
           }}
           placeholder="Find..."
-          className="w-full rounded border border-zinc-300 bg-zinc-50 py-1 pl-7 pr-2 text-xs outline-none focus:border-indigo-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+          className="w-full rounded border border-zinc-300 bg-zinc-50 py-1 pl-7 pr-2 text-xs outline-none focus:border-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
         />
       </div>
       <input
@@ -534,7 +534,7 @@ function InlineFindReplace({
           if (e.key === "Escape") onClose();
         }}
         placeholder="Replace..."
-        className="flex-1 min-w-25 rounded border border-zinc-300 bg-zinc-50 py-1 px-2 text-xs outline-none focus:border-indigo-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+        className="flex-1 min-w-25 rounded border border-zinc-300 bg-zinc-50 py-1 px-2 text-xs outline-none focus:border-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
       />
       {find && (
         <span className="text-[10px] text-zinc-500 whitespace-nowrap">
@@ -544,7 +544,7 @@ function InlineFindReplace({
       <button
         onClick={() => onReplace(find, replace, false)}
         disabled={!find}
-        className="rounded bg-indigo-600 px-2.5 py-1 text-[10px] font-medium text-white hover:bg-indigo-500 disabled:opacity-40"
+        className="rounded bg-zinc-800 px-2.5 py-1 text-[10px] font-medium text-white hover:bg-zinc-700 disabled:opacity-40 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-300"
       >
         Replace
       </button>

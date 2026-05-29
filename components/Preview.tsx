@@ -139,7 +139,7 @@ ${highlighted}
         if (task) {
           return `<li class="flex items-start gap-2 my-1.5 text-zinc-800 dark:text-zinc-200"><input type="checkbox" ${
             checked ? "checked" : ""
-          } disabled class="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-400 text-indigo-600 accent-indigo-600 dark:border-zinc-600 dark:accent-indigo-500" /><span>${
+          } disabled class="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-400 text-zinc-900 accent-zinc-900 dark:border-zinc-600 dark:accent-zinc-100" /><span>${
             checked ? `<span class="line-through text-zinc-400 dark:text-zinc-500">${text}</span>` : text
           }</span></li>`;
         }
@@ -299,7 +299,7 @@ ${highlighted}
           onClick={() => setMode("preview")}
           className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
             mode === "preview"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
               : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
           }`}
         >
@@ -310,7 +310,7 @@ ${highlighted}
           onClick={() => setMode("html")}
           className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
             mode === "html"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
               : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
           }`}
         >
@@ -322,7 +322,7 @@ ${highlighted}
       <div
         ref={mergedRef}
         onScroll={onScroll}
-        className="flex-1 overflow-y-auto overscroll-contain bg-linear-to-b from-white to-zinc-50 dark:from-black dark:to-black"
+        className="flex-1 overflow-y-auto overscroll-contain bg-white dark:bg-black"
       >
        {mode === "preview" ? (
   <div

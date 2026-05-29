@@ -17,11 +17,9 @@ import Footer from "@/components/Footer";
 import FileTabs from "@/components/FileTabs";
 import type { FileTab } from "@/components/FileTabs";
 import PresentationMode from "@/components/PresentationMode";
-import LintPanel from "@/components/LintPanel";
-import { useKeybindEngine, VimEmacsToggle } from "@/components/KeybindEngine";
 import ShortcutModal from "@/components/ShortcutModal";
 import { sampleMarkdown } from "@/lib/sample";
-import { FiEdit3, FiEye, FiShare2, FiMonitor, FiAlertCircle } from "react-icons/fi";
+import { FiEdit3, FiEye, FiShare2, FiMonitor } from "react-icons/fi";
 import { extractHeadingsFromMarkdown } from "@/lib/headings";
 import { encodeShareLink, decodeShareLink, clearShareHash } from "@/lib/share";
 
@@ -51,11 +49,10 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [presenting, setPresenting] = useState(false);
-  const [showLint, setShowLint] = useState(false);
-  const [keybindMode, setKeybindMode] = useState<"normal" | "vim" | "emacs">("normal");
-  const [shareTooltip, setShareTooltip] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [shareTooltip, setShareTooltip] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [splitPercent, setSplitPercent] = useState(50);
   const dragCounterRef = useRef(0);
 
   // Recent files tracking
@@ -227,13 +224,7 @@ export default function Home() {
     setTimeout(() => setShareTooltip(false), 2000);
   }, [markdown]);
 
-  // Keybind engine
-  useKeybindEngine({
-    mode: keybindMode,
-    textareaRef: editorRef,
-    value: markdown,
-    onChange: setMarkdown,
-  });
+
 
   // Global "?" key opens shortcut reference modal
   useEffect(() => {
@@ -295,31 +286,6 @@ export default function Home() {
     const target = previewScrollRef.current?.querySelector<HTMLElement>(`#${id}`);
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
-
-  const handleExportPdf = useCallback(() => {
-    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1200,height=900");
-    if (!printWindow) return;
-
-    printWindow.document.write(`<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Markdown Export</title>
-    <style>
-      body { font-family: Arial, sans-serif; color: #111827; margin: 32px; line-height: 1.6; }
-      pre { background: #111827; color: #f9fafb; padding: 16px; border-radius: 10px; overflow: auto; }
-      code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-      table { width: 100%; border-collapse: collapse; margin: 16px 0; }
-      th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; }
-      blockquote { border-left: 4px solid #6366f1; padding-left: 12px; color: #4b5563; }
-    </style>
-  </head>
-  <body>${parsedHtml}</body>
-</html>`);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => printWindow.print(), 150);
-  }, [parsedHtml]);
 
   useEffect(() => {
     // Restore persisted state from localStorage after hydration
@@ -447,7 +413,7 @@ export default function Home() {
 
   return (
     <div
-      className="flex min-h-screen flex-col bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100"
+      className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white"
       onDragEnter={handleGlobalDragEnter}
       onDragLeave={handleGlobalDragLeave}
       onDragOver={handleGlobalDragOver}
@@ -455,9 +421,9 @@ export default function Home() {
     >
       {/* Drag overlay */}
       {dragOver && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-indigo-500/10 backdrop-blur-sm pointer-events-none">
-          <div className="rounded-2xl border-2 border-dashed border-indigo-400 bg-white/90 px-10 py-8 shadow-xl dark:bg-zinc-900/90 dark:border-indigo-500">
-            <p className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/5 backdrop-blur-sm pointer-events-none">
+          <div className="rounded-2xl border-2 border-dashed border-zinc-400 bg-white/90 px-10 py-8 shadow-xl dark:bg-zinc-900/90 dark:border-zinc-500">
+            <p className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">
               Drop .md or .txt file here
             </p>
           </div>
@@ -465,9 +431,9 @@ export default function Home() {
       )}
       <Navbar recentFiles={recentFiles} activeFileName={activeFile?.name} onSelectFile={setActiveFileId} />
 
-      <main className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-zinc-950">
+      <main className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-black">
         {/* Sticky toolbar bar */}
-        <div className="sticky top-16 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur-sm dark:border-zinc-800/50 dark:bg-zinc-950/95">
+        <div className="sticky top-17 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur-sm dark:border-zinc-800/50 dark:bg-zinc-950/95">
           <div className="px-4 py-3 sm:px-6 lg:px-8">
             <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
               {/* Mobile tab toggle */}
@@ -476,7 +442,7 @@ export default function Home() {
                   onClick={() => setActiveTab("editor")}
                   className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                     activeTab === "editor"
-                      ? "bg-indigo-100 text-indigo-900 shadow-sm dark:bg-indigo-600/20 dark:text-indigo-100"
+                      ? "bg-zinc-200 text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
                       : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-200"
                   }`}
                 >
@@ -487,7 +453,7 @@ export default function Home() {
                   onClick={() => setActiveTab("preview")}
                   className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                     activeTab === "preview"
-                      ? "bg-purple-100 text-purple-900 shadow-sm dark:bg-purple-600/20 dark:text-purple-100"
+                      ? "bg-zinc-200 text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
                       : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-200"
                   }`}
                 >
@@ -497,26 +463,13 @@ export default function Home() {
               </div>
 
               {/* Desktop label */}
-              <div className="hidden flex-1 sm:flex sm:items-center sm:gap-2">
+              <div className="hidden flex-1 sm:flex sm:items-center sm:gap-2 mt-0">
                 <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
                   Tools
                 </span>
               </div>
 
               <div className="hidden sm:flex items-center gap-1">
-                {/* Lint toggle */}
-                <button
-                  onClick={() => setShowLint(!showLint)}
-                  title="Markdown linting"
-                  className={`flex h-7 w-7 items-center justify-center rounded-md transition-all ${
-                    showLint
-                      ? "bg-amber-100 text-amber-600 dark:bg-amber-600/20 dark:text-amber-400"
-                      : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
-                  }`}
-                >
-                  <FiAlertCircle className="h-3.5 w-3.5" />
-                </button>
-
                 {/* Presentation mode */}
                 <button
                   onClick={() => setPresenting(true)}
@@ -541,9 +494,6 @@ export default function Home() {
                     </span>
                   )}
                 </div>
-
-                {/* Keybind toggle */}
-                <VimEmacsToggle mode={keybindMode} onChange={setKeybindMode} />
               </div>
 
               {/* Sidebar toggle â€” always visible in toolbar */}
@@ -552,7 +502,7 @@ export default function Home() {
                 title={sidebarOpen ? "Close outline" : "Open outline"}
                 className={`flex h-7 w-7 items-center justify-center rounded-md transition-all ${
                   sidebarOpen
-                    ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-600/20 dark:text-indigo-400"
+                    ? "bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100"
                     : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
                 }`}
               >
@@ -568,7 +518,6 @@ export default function Home() {
                 html={parsedHtml}
                 onReset={handleReset}
                 onClear={handleClear}
-                onExportPdf={handleExportPdf}
               />
             </div>
           </div>
@@ -636,13 +585,14 @@ export default function Home() {
 
         {/* Split panes (hidden when fullscreen) */}
         {!isEditorFullscreen && !isPreviewFullscreen && (
-          <div className="flex flex-1 overflow-hidden px-4 py-4 sm:px-6 lg:px-8">
-            <div className="mx-auto flex w-full max-w-6xl gap-4">
+          <div className="flex flex-1 overflow-hidden px-4 pt-12 pb-4 sm:px-6 lg:px-8">
+            <div className="mx-auto flex w-full max-w-6xl overflow-hidden" style={{ gap: 0 }}>
               {/* Editor pane */}
               <div
-                className={`flex-1 min-w-0 overflow-hidden ${
+                className={`min-w-0 overflow-hidden ${
                   activeTab === "preview" ? "hidden sm:flex" : "flex"
                 } flex-col`}
+                style={{ width: `${splitPercent}%` }}
               >
                 <FileTabs
                   files={files}
@@ -681,11 +631,38 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* Draggable divider */}
+              <div
+                className="w-1.5 cursor-col-resize shrink-0 bg-zinc-200 hover:bg-zinc-400 dark:bg-zinc-800 dark:hover:bg-zinc-600 transition-colors relative mx-1 rounded-full"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  const startX = e.clientX;
+                  const startPercent = splitPercent;
+                  const container = (e.currentTarget as HTMLElement).parentElement;
+                  if (!container) return;
+                  const containerWidth = container.getBoundingClientRect().width;
+                  const onMouseMove = (ev: MouseEvent) => {
+                    const dx = ev.clientX - startX;
+                    const newPercent = Math.min(85, Math.max(15, startPercent + (dx / containerWidth) * 100));
+                    setSplitPercent(newPercent);
+                  };
+                  const onMouseUp = () => {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                  };
+                  document.addEventListener('mousemove', onMouseMove);
+                  document.addEventListener('mouseup', onMouseUp);
+                }}
+              >
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-8 bg-zinc-400 dark:bg-zinc-600 rounded-full" />
+              </div>
+
               {/* Preview pane */}
               <div
-                className={`flex-1 min-w-0 overflow-hidden ${
+                className={`min-w-0 overflow-hidden ${
                   activeTab === "editor" ? "hidden sm:flex" : "flex"
                 } flex-col`}
+                style={{ width: `${100 - splitPercent}%` }}
               >
                 <div className="flex h-full gap-3">
                   <div className="min-w-0 flex-1">
@@ -747,7 +724,7 @@ export default function Home() {
                                 style={{
                                   width: `${heading.depth * 4}px`,
                                   height: "2px",
-                                  backgroundColor: `var(--depth-color, ${heading.depth === 1 ? "#6366f1" : heading.depth === 2 ? "#8b5cf6" : "#a78bfa"})`,
+                                  backgroundColor: `var(--depth-color, ${heading.depth === 1 ? "#18181b" : heading.depth === 2 ? "#52525b" : "#a1a1aa"})`,
                                   opacity: 0.5 + heading.depth * 0.1,
                                 }}
                               />
@@ -765,14 +742,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Lint panel (below toolbar, above split panes) */}
-        {showLint && (
-          <div className="px-4 py-2 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-6xl">
-              <LintPanel markdown={markdown} onClose={() => setShowLint(false)} />
-            </div>
-          </div>
-        )}
+
       </main>
 
       {/* Presentation mode overlay */}

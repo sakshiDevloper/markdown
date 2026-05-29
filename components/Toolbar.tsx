@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   FiCopy,
   FiDownload,
-  FiFileText,
   FiRotateCcw,
   FiTrash2,
 } from "react-icons/fi";
@@ -13,7 +12,6 @@ interface ToolbarProps {
   html: string;
   onReset: () => void;
   onClear: () => void;
-  onExportPdf: () => void;
 }
 
 // Toolbar with action buttons: reset, clear, copy, and download
@@ -21,7 +19,6 @@ export default function Toolbar({
   html,
   onReset,
   onClear,
-  onExportPdf,
 }: ToolbarProps) {
   // State for copy feedback
   const [copyFeedback, setCopyFeedback] = useState(false);
@@ -184,20 +181,13 @@ export default function Toolbar({
       <button
         onClick={downloadHtml}
         title="Download HTML file"
-        className="inline-flex items-center gap-1.5 rounded-md bg-linear-to-r from-indigo-600 to-purple-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-md shadow-indigo-600/30 transition-all duration-200 hover:from-indigo-500 hover:to-purple-500 hover:shadow-indigo-500/40"
+        className="inline-flex items-center gap-1.5 rounded-md bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
       >
         <FiDownload className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">Download</span>
       </button>
 
-      <button
-        onClick={onExportPdf}
-        title="Print / Export PDF"
-        className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-all duration-200 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-      >
-        <FiFileText className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">PDF</span>
-      </button>
+
     </div>
   );
 }

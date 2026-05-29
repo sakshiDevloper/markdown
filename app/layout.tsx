@@ -46,7 +46,7 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  const theme = localStorage.getItem('theme') || 'dark';
+                  const theme = localStorage.getItem('theme') || '${process.env.NEXT_PUBLIC_DEFAULT_THEME || 'dark'}';
                   if (theme === 'light') {
                     document.documentElement.classList.remove('dark');
                   } else {
@@ -72,9 +72,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="flex min-h-screen flex-col bg-white text-zinc-950 transition-colors duration-200 dark:bg-zinc-950 dark:text-zinc-100">
+      <body className="flex min-h-screen flex-col bg-white text-black transition-colors duration-200 dark:bg-black dark:text-white">
         
-        <ThemeProvider attribute="class" defaultTheme="dark" storageKey="theme">
+        <ThemeProvider attribute="class" defaultTheme={process.env.NEXT_PUBLIC_DEFAULT_THEME || "dark"} storageKey="theme">
           
           {children}
          

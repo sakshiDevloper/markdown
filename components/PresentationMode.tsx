@@ -151,7 +151,7 @@ export default function PresentationMode({ markdown, onClose }: PresentationMode
               key={i}
               onClick={() => setSlideIndex(i)}
               className={`h-2 rounded-full transition-all ${
-                i === slideIndex ? "w-6 bg-indigo-500" : "w-2 bg-zinc-700 hover:bg-zinc-500"
+                i === slideIndex ? "w-6 bg-white" : "w-2 bg-zinc-700 hover:bg-zinc-500"
               }`}
             />
           ))}
@@ -223,7 +223,7 @@ function createSlideRenderer(slugger: ReturnType<typeof createSlugger>) {
     if (task) {
       return `<li class="flex items-center gap-2 text-zinc-300 my-1"><input type="checkbox" ${
         checked ? "checked" : ""
-      } disabled class="h-4 w-4 rounded border-zinc-600 accent-indigo-500" /><span>${
+      } disabled class="h-4 w-4 rounded border-zinc-600 accent-zinc-100" /><span>${
         checked ? `<span class="line-through text-zinc-500">${text}</span>` : text
       }</span></li>`;
     }
@@ -233,7 +233,7 @@ function createSlideRenderer(slugger: ReturnType<typeof createSlugger>) {
   renderer.paragraph = ({ text }) => `<p class="text-zinc-300 my-2 leading-relaxed text-lg">${text}</p>`;
 
   renderer.blockquote = ({ text }) =>
-    `<blockquote class="border-l-4 border-indigo-500 pl-4 my-4 text-zinc-400 italic">${text}</blockquote>`;
+    `<blockquote class="border-l-4 border-zinc-500 pl-4 my-4 text-zinc-400 italic">${text}</blockquote>`;
 
   renderer.hr = () => `<hr class="my-6 border-zinc-800" />`;
 

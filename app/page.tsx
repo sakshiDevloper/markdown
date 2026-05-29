@@ -53,6 +53,7 @@ export default function Home() {
   const [shareTooltip, setShareTooltip] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [splitPercent, setSplitPercent] = useState(50);
+  const [sidebarPercent, setSidebarPercent] = useState(35);
   const dragCounterRef = useRef(0);
 
   // Recent files tracking
@@ -433,8 +434,8 @@ export default function Home() {
 
       <main className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-black">
         {/* Sticky toolbar bar */}
-        <div className="sticky top-17 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur-sm dark:border-zinc-800/50 dark:bg-zinc-950/95">
-          <div className="px-4 py-3 sm:px-6 lg:px-8">
+        <div className="sticky top-0 z-30 border-b border-zinc-200 bg-white dark:border-zinc-800/50 dark:bg-zinc-950">
+          <div className="px-4 py-2 sm:px-6 lg:px-8">
             <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
               {/* Mobile tab toggle */}
               <div className="flex gap-1 rounded-lg border border-zinc-300 bg-zinc-50 p-1 dark:border-zinc-700 dark:bg-zinc-900 sm:hidden">
@@ -674,10 +675,38 @@ export default function Home() {
                       onToggleFullscreen={() => setFullscreen("preview")}
                     />
                   </div>
-                {/* Sidebar outline panel — professional right side panel */}
+                {/* Sidebar outline panel with resizable divider */}
                 {sidebarOpen && (
-                  <aside className="w-64 shrink-0 border-l border-zinc-200 bg-white dark:border-zinc-800/60 dark:bg-zinc-950 flex flex-col">
-                    {/* Header */}
+                  <>
+                    {/* Draggable sidebar divider */}
+                    <div
+                      className="w-1 cursor-col-resize shrink-0 bg-zinc-200 hover:bg-zinc-400 dark:bg-zinc-800 dark:hover:bg-zinc-600 transition-colors rounded-full"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        const startX = e.clientX;
+                        const startPercent = sidebarPercent;
+                        const container = (e.currentTarget as HTMLElement).parentElement;
+                        if (!container) return;
+                        const containerWidth = container.getBoundingClientRect().width;
+                        const onMouseMove = (ev: MouseEvent) => {
+                          const dx = startX - ev.clientX;
+                          const newPercent = Math.min(50, Math.max(15, startPercent + (dx / containerWidth) * 100));
+                          setSidebarPercent(newPercent);
+                        };
+                        const onMouseUp = () => {
+                          document.removeEventListener('mousemove', onMouseMove);
+                          document.removeEventListener('mouseup', onMouseUp);
+                        };
+                        document.addEventListener('mousemove', onMouseMove);
+                        document.addEventListener('mouseup', onMouseUp);
+                      }}
+                    >
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-8 bg-zinc-400 dark:bg-zinc-600 rounded-full" />
+                    </div>
+                    <aside
+                      className="shrink-0 border-l border-zinc-200 bg-white dark:border-zinc-800/60 dark:bg-zinc-950 flex flex-col"
+                      style={{ width: `${sidebarPercent}%`, minWidth: '180px', maxWidth: '50%' }}
+                    >
                     <div className="flex items-center justify-between border-b border-zinc-100 px-3 py-2.5 dark:border-zinc-800/40">
                       <div className="flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400">
@@ -735,6 +764,7 @@ export default function Home() {
                       )}
                     </div>
                   </aside>
+                </>
                 )}
                 </div>
               </div>

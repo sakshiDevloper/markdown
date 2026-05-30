@@ -53,7 +53,6 @@ export default function Home() {
   const [shareTooltip, setShareTooltip] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [splitPercent, setSplitPercent] = useState(50);
-  const [sidebarPercent, setSidebarPercent] = useState(35);
   const dragCounterRef = useRef(0);
 
   // Recent files tracking
@@ -414,7 +413,7 @@ export default function Home() {
 
   return (
     <div
-      className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white"
+      className="flex min-h-screen flex-col bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100"
       onDragEnter={handleGlobalDragEnter}
       onDragLeave={handleGlobalDragLeave}
       onDragOver={handleGlobalDragOver}
@@ -422,9 +421,9 @@ export default function Home() {
     >
       {/* Drag overlay */}
       {dragOver && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/5 backdrop-blur-sm pointer-events-none">
-          <div className="rounded-2xl border-2 border-dashed border-zinc-400 bg-white/90 px-10 py-8 shadow-xl dark:bg-zinc-900/90 dark:border-zinc-500">
-            <p className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-indigo-500/10 backdrop-blur-sm pointer-events-none">
+          <div className="rounded-2xl border-2 border-dashed border-indigo-400 bg-white/90 px-10 py-8 shadow-xl dark:bg-zinc-900/90 dark:border-indigo-500">
+            <p className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">
               Drop .md or .txt file here
             </p>
           </div>
@@ -432,10 +431,10 @@ export default function Home() {
       )}
       <Navbar recentFiles={recentFiles} activeFileName={activeFile?.name} onSelectFile={setActiveFileId} />
 
-      <main className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-black">
+      <main className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-zinc-950">
         {/* Sticky toolbar bar */}
-        <div className="sticky top-0 z-30 border-b border-zinc-200 bg-white dark:border-zinc-800/50 dark:bg-zinc-950">
-          <div className="px-4 py-2 sm:px-6 lg:px-8">
+        <div className="sticky top-16 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur-sm dark:border-zinc-800/50 dark:bg-zinc-950/95">
+          <div className="px-4 py-3 sm:px-6 lg:px-8">
             <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
               {/* Mobile tab toggle */}
               <div className="flex gap-1 rounded-lg border border-zinc-300 bg-zinc-50 p-1 dark:border-zinc-700 dark:bg-zinc-900 sm:hidden">
@@ -443,7 +442,7 @@ export default function Home() {
                   onClick={() => setActiveTab("editor")}
                   className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                     activeTab === "editor"
-                      ? "bg-zinc-200 text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
+                      ? "bg-indigo-100 text-indigo-900 shadow-sm dark:bg-indigo-600/20 dark:text-indigo-100"
                       : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-200"
                   }`}
                 >
@@ -454,7 +453,7 @@ export default function Home() {
                   onClick={() => setActiveTab("preview")}
                   className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                     activeTab === "preview"
-                      ? "bg-zinc-200 text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
+                      ? "bg-purple-100 text-purple-900 shadow-sm dark:bg-purple-600/20 dark:text-purple-100"
                       : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-200"
                   }`}
                 >
@@ -464,7 +463,7 @@ export default function Home() {
               </div>
 
               {/* Desktop label */}
-              <div className="hidden flex-1 sm:flex sm:items-center sm:gap-2 mt-0">
+              <div className="hidden flex-1 sm:flex sm:items-center sm:gap-2">
                 <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
                   Tools
                 </span>
@@ -503,7 +502,7 @@ export default function Home() {
                 title={sidebarOpen ? "Close outline" : "Open outline"}
                 className={`flex h-7 w-7 items-center justify-center rounded-md transition-all ${
                   sidebarOpen
-                    ? "bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100"
+                    ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-600/20 dark:text-indigo-400"
                     : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
                 }`}
               >
@@ -586,7 +585,7 @@ export default function Home() {
 
         {/* Split panes (hidden when fullscreen) */}
         {!isEditorFullscreen && !isPreviewFullscreen && (
-          <div className="flex flex-1 overflow-hidden px-4 pt-12 pb-4 sm:px-6 lg:px-8">
+          <div className="flex flex-1 overflow-hidden px-4 py-4 sm:px-6 lg:px-8">
             <div className="mx-auto flex w-full max-w-6xl overflow-hidden" style={{ gap: 0 }}>
               {/* Editor pane */}
               <div
@@ -675,38 +674,10 @@ export default function Home() {
                       onToggleFullscreen={() => setFullscreen("preview")}
                     />
                   </div>
-                {/* Sidebar outline panel with resizable divider */}
+                {/* Sidebar outline panel — professional right side panel */}
                 {sidebarOpen && (
-                  <>
-                    {/* Draggable sidebar divider */}
-                    <div
-                      className="w-1 cursor-col-resize shrink-0 bg-zinc-200 hover:bg-zinc-400 dark:bg-zinc-800 dark:hover:bg-zinc-600 transition-colors rounded-full"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        const startX = e.clientX;
-                        const startPercent = sidebarPercent;
-                        const container = (e.currentTarget as HTMLElement).parentElement;
-                        if (!container) return;
-                        const containerWidth = container.getBoundingClientRect().width;
-                        const onMouseMove = (ev: MouseEvent) => {
-                          const dx = startX - ev.clientX;
-                          const newPercent = Math.min(50, Math.max(15, startPercent + (dx / containerWidth) * 100));
-                          setSidebarPercent(newPercent);
-                        };
-                        const onMouseUp = () => {
-                          document.removeEventListener('mousemove', onMouseMove);
-                          document.removeEventListener('mouseup', onMouseUp);
-                        };
-                        document.addEventListener('mousemove', onMouseMove);
-                        document.addEventListener('mouseup', onMouseUp);
-                      }}
-                    >
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-8 bg-zinc-400 dark:bg-zinc-600 rounded-full" />
-                    </div>
-                    <aside
-                      className="shrink-0 border-l border-zinc-200 bg-white dark:border-zinc-800/60 dark:bg-zinc-950 flex flex-col"
-                      style={{ width: `${sidebarPercent}%`, minWidth: '180px', maxWidth: '50%' }}
-                    >
+                  <aside className="w-64 shrink-0 border-l border-zinc-200 bg-white dark:border-zinc-800/60 dark:bg-zinc-950 flex flex-col">
+                    {/* Header */}
                     <div className="flex items-center justify-between border-b border-zinc-100 px-3 py-2.5 dark:border-zinc-800/40">
                       <div className="flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400">
@@ -753,7 +724,7 @@ export default function Home() {
                                 style={{
                                   width: `${heading.depth * 4}px`,
                                   height: "2px",
-                                  backgroundColor: `var(--depth-color, ${heading.depth === 1 ? "#18181b" : heading.depth === 2 ? "#52525b" : "#a1a1aa"})`,
+                                  backgroundColor: `var(--depth-color, ${heading.depth === 1 ? "#6366f1" : heading.depth === 2 ? "#8b5cf6" : "#a78bfa"})`,
                                   opacity: 0.5 + heading.depth * 0.1,
                                 }}
                               />
@@ -764,7 +735,6 @@ export default function Home() {
                       )}
                     </div>
                   </aside>
-                </>
                 )}
                 </div>
               </div>

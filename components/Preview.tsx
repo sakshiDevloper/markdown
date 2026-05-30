@@ -37,6 +37,37 @@ const escapeHtml = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
+// Strip markdown syntax to plain text
+function stripMarkdown(md: string): string {
+  return md
+    // Remove code blocks (```...```)
+    .replace(/```[\s\S]*?```/g, "")
+    // Remove inline code
+    .replace(/`([^`]+)`/g, "$1")
+    // Remove images ![alt](url)
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
+    // Remove links [text](url) → text
+    .replace(/\[([^\]]*)\]\([^)]+\)/g, "$1")
+    // Remove bold/italic **text** __text__ *text* _text_ ~~text~~
+    .replace(/(\*\*|__)(.*?)\1/g, "$2")
+    .replace(/(\*|_)(.*?)\1/g, "$2")
+    .replace(/~~(.*?)~~/g, "$1")
+    // Remove headings markers
+    .replace(/^#{1,6}\s+/gm, "")
+    // Remove blockquotes
+    .replace(/^>\s+/gm, "")
+    // Remove list markers
+    .replace(/^[-*+]\s+/gm, "")
+    .replace(/^\d+\.\s+/gm, "")
+    // Remove horizontal rules
+    .replace(/^[-*_]{3,}\s*$/gm, "")
+    // Remove HTML tags
+    .replace(/<[^>]*>/g, "")
+    // Remove extra blank lines
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 export default function Preview({
   markdown,
   scrollRef,
@@ -46,7 +77,7 @@ export default function Preview({
 }: PreviewProps) {
   const previewRef = useRef<HTMLDivElement>(null);
 
-  const [mode, setMode] = useState<"preview" | "html">("preview");
+  const [mode, setMode] = useState<"preview" | "html" | "txt">("preview");
   const [taskProgress, setTaskProgress] = useState({ done: 0, total: 0 });
 
   const mergedRef = useCallback(
@@ -175,6 +206,9 @@ ${highlighted}
       `;
     }
   }, [markdown]);
+
+  // Strip markdown → plain text
+  const plainText = useMemo(() => stripMarkdown(markdown), [markdown]);
 
   useEffect(() => {
     if (mode !== "preview" || !previewRef.current) return;
@@ -316,6 +350,17 @@ ${highlighted}
         >
           Raw HTML
         </button>
+
+        <button
+          onClick={() => setMode("txt")}
+          className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+            mode === "txt"
+              ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
+              : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+          }`}
+        >
+          TXT
+        </button>
       </div>
 
       {/* Content */}
@@ -335,10 +380,16 @@ ${highlighted}
       className="max-w-none"
     />
   </div>
-) : (
+) : mode === "html" ? (
           <div className="h-full p-6">
             <pre className="h-full overflow-auto rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100">
               <code>{html}</code>
+            </pre>
+          </div>
+        ) : (
+          <div className="h-full p-6">
+            <pre className="h-full overflow-auto rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100">
+              <code>{plainText}</code>
             </pre>
           </div>
         )}
@@ -350,10 +401,37 @@ ${highlighted}
           <div>
             {mode === "preview"
               ? "HTML Preview"
-              : "Raw HTML Output"}
+              : mode === "html"
+              ? "Raw HTML Output"
+              : "Plain Text"}
           </div>
 
-          <div>UTF-8</div>
+          <div className="flex items-center gap-3">
+            {mode === "txt" && (
+              <button
+                onClick={() => {
+                  const blob = new Blob([plainText], { type: "text/plain" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "markdown.txt";
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
+                className="flex items-center gap-1 rounded px-2 py-0.5 font-medium text-zinc-600 transition-all hover:bg-zinc-200 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download .txt
+              </button>
+            )}
+            <span>UTF-8</span>
+          </div>
         </div>
       </div>
     </div>

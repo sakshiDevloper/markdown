@@ -586,13 +586,13 @@ export default function Home() {
         {/* Split panes (hidden when fullscreen) */}
         {!isEditorFullscreen && !isPreviewFullscreen && (
           <div className="flex flex-1 overflow-hidden px-4 py-4 sm:px-6 lg:px-8">
-            <div className="mx-auto flex w-full max-w-6xl overflow-hidden" style={{ gap: 0 }}>
+            <div className="mx-auto flex w-full max-w-6xl flex-col overflow-hidden sm:flex-row" style={{ gap: 0 }}>
               {/* Editor pane */}
               <div
                 className={`min-w-0 overflow-hidden ${
                   activeTab === "preview" ? "hidden sm:flex" : "flex"
                 } flex-col`}
-                style={{ width: `${splitPercent}%` }}
+                style={{ flex: `${splitPercent} 1 0` }}
               >
                 <FileTabs
                   files={files}
@@ -614,26 +614,11 @@ export default function Home() {
                   onExport={handleExportMarkdown}
                   onMarkdownDrop={handleMarkdownFileDrop}
                 />
-                {/* Mobile preview below editor */}
-                <div className="shrink-0 border-t border-zinc-200 dark:border-zinc-800 mt-4 pt-4 sm:hidden">
-                  <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 px-2">
-                    Preview
-                  </div>
-                  <div className="rounded-lg border border-zinc-200 dark:border-zinc-800/60 bg-white dark:bg-black max-h-64 overflow-y-auto">
-                    <Preview
-                      markdown={markdown}
-                      scrollRef={previewScrollRef}
-                      onScroll={handlePreviewScroll}
-                      fullscreen={false}
-                      onToggleFullscreen={() => setFullscreen("preview")}
-                    />
-                  </div>
-                </div>
               </div>
 
               {/* Draggable divider */}
               <div
-                className="w-1.5 cursor-col-resize shrink-0 bg-zinc-200 hover:bg-zinc-400 dark:bg-zinc-800 dark:hover:bg-zinc-600 transition-colors relative mx-1 rounded-full"
+                className="hidden w-1.5 cursor-col-resize shrink-0 bg-zinc-200 hover:bg-zinc-400 dark:bg-zinc-800 dark:hover:bg-zinc-600 transition-colors relative mx-1 rounded-full sm:block"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   const startX = e.clientX;
@@ -659,10 +644,8 @@ export default function Home() {
 
               {/* Preview pane */}
               <div
-                className={`min-w-0 overflow-hidden ${
-                  activeTab === "editor" ? "hidden sm:flex" : "flex"
-                } flex-col`}
-                style={{ width: `${100 - splitPercent}%` }}
+                className="flex min-w-0 flex-col overflow-hidden"
+                style={{ flex: `${100 - splitPercent} 1 0` }}
               >
                 <div className="flex h-full gap-3">
                   <div className="min-w-0 flex-1">

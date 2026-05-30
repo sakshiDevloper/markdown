@@ -433,7 +433,7 @@ export default function Home() {
 
       <main className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-zinc-950">
         {/* Sticky toolbar bar */}
-        <div className="sticky top-16 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur-sm dark:border-zinc-800/50 dark:bg-zinc-950/95">
+        <div className="sm:sticky sm:top-16 sm:z-30 border-b border-zinc-200 bg-white/95 backdrop-blur-sm dark:border-zinc-800/50 dark:bg-zinc-950/95">
           <div className="px-4 py-3 sm:px-6 lg:px-8">
             <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
               {/* Mobile tab toggle */}

@@ -43,7 +43,7 @@ export default function Navbar({ recentFiles: propRecentFiles, activeFileName, o
   }, [showRecent]);
 
   return (
-    <nav className="sticky top-2 z-40 border border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800/50 dark:bg-zinc-950/80 mx-4 rounded-lg">
+    <nav className="sm:sticky sm:top-2 sm:z-40 border border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800/50 dark:bg-zinc-950/80 mx-4 rounded-lg">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo and brand */}
